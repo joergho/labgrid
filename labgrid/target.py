@@ -154,7 +154,7 @@ class Target:
             self.await_resources(found)
         return found[0]
 
-    def _get_driver(self, cls, *, name=None, resource=None, activate=True, active=False):
+    def _get_driver(self, cls, *, name=None, resource=None, activate=True, active=False, any_if_multiple=False):
         assert not (activate is True and active is True)
 
         found = []
@@ -197,7 +197,7 @@ class Target:
                 elif prio == prio_last:
                     prio_found.append(drv)
 
-            if len(prio_found) == 1:
+            if ((len(prio_found) == 1) or any_if_multiple):
                 found = prio_found
             else:
                 raise NoDriverFoundError(
@@ -208,7 +208,7 @@ class Target:
             self.activate(found[0])
         return found[0]
 
-    def get_active_driver(self, cls, *, name=None, resource=None):
+    def get_active_driver(self, cls, *, name=None, resource=None, any_if_multiple=False):
         """
         Helper function to get the active driver of the target.
         Returns the active driver found, otherwise None.
@@ -217,8 +217,10 @@ class Target:
         cls -- driver-class to return as a resource
         name -- optional name to use as a filter
         resource -- optional resource to use as a filter
+        any_if_multiple -- optional return any the active drivers if they have same priority
         """
-        return self._get_driver(cls, name=name, resource=resource, activate=False, active=True)
+        return self._get_driver(cls, name=name, resource=resource, activate=False, active=True,
+                                any_if_multiple=any_if_multiple)
 
     def get_driver(self, cls, *, name=None, resource=None, activate=True):
         """

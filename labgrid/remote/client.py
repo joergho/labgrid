@@ -679,8 +679,10 @@ class ClientSession(ApplicationSession):
                 strategy.transition(self.args.state)
                 # deactivate console drivers so we are able to connect with microcom later
                 try:
-                    con = target.get_active_driver("ConsoleProtocol")
-                    target.deactivate(con)
+                    while True:
+                        print(f"deactivate {target} for console access")
+                        con = target.get_active_driver("ConsoleProtocol", any_if_multiple=True)
+                        target.deactivate(con)
                 except NoDriverFoundError:
                     pass
         else:
