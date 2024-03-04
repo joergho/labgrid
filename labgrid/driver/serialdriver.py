@@ -114,3 +114,8 @@ class SerialDriver(ConsoleExpectMixin, Driver, ConsoleProtocol):
 
     def __str__(self):
         return f"SerialDriver({self.target.name})"
+
+@target_factory.reg_driver
+@attr.s(eq=False)
+class SerialDriver2(SerialDriver):
+    pass

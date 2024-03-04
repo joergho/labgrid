@@ -1,7 +1,7 @@
 from .bareboxdriver import BareboxDriver
 from .ubootdriver import UBootDriver
 from .smallubootdriver import SmallUBootDriver
-from .serialdriver import SerialDriver
+from .serialdriver import SerialDriver, SerialDriver2
 from .shelldriver import ShellDriver
 from .sshdriver import SSHDriver
 from .externalconsoledriver import ExternalConsoleDriver
@@ -48,3 +48,4 @@ from .usbtmcdriver import USBTMCDriver
 from .deditecrelaisdriver import DeditecRelaisDriver
 from .dediprogflashdriver import DediprogFlashDriver
 from .httpdigitaloutput import HttpDigitalOutputDriver
+from .chromiumecdriver import ChromiumEcPowerDriver
