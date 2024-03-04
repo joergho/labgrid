@@ -128,6 +128,11 @@ class UBootDriver(CommandMixin, Driver, CommandProtocol, LinuxBootProtocol):
         except TIMEOUT:
             self._status = 0
             raise
+        marker = 'U-BOOT Console successfully connected'
+        self.console.sendline(f"echo '{marker}'")
+        self.console.expect(marker, timeout=2)
+        self.console.expect(self.prompt, timeout=1)
+
 
     @Driver.check_active
     @step()
