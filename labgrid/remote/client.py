@@ -1247,8 +1247,9 @@ class ClientSession(ApplicationSession):
         place = self.get_acquired_place()
         target = self._get_target(place)
         name = self.args.name
-        drv = self._get_driver_or_new(target, "USBStorageDriver", activate=False, name=name)
-        drv.storage.timeout = self.args.wait
+        drv = self._get_driver_or_new(target, self.args.driver, activate=False, name=name)
+        if getattr(drv, "storage", None):
+            drv.storage.timeout = self.args.wait
         target.activate(drv)
 
         try:
@@ -1822,6 +1823,8 @@ def main():
                            type=Mode, choices=Mode, default=Mode.DD,
                            help="Choose tool for writing images (default: %(default)s)")
     subparser.add_argument('--name', '-n', help="optional resource name")
+    subparser.add_argument('--driver', '-d', help="The driver to use",
+                           default="UsbStorageDriver")
     subparser.add_argument('filename', help='filename to boot on the target')
     subparser.set_defaults(func=ClientSession.write_image)
 

@@ -3,6 +3,7 @@ from .ubootdriver import UBootDriver
 from .smallubootdriver import SmallUBootDriver
 from .serialdriver import SerialDriver, SerialDriver2
 from .shelldriver import ShellDriver
+from .shellstoragedriver import ShellStorageDriver
 from .sshdriver import SSHDriver
 from .externalconsoledriver import ExternalConsoleDriver
 from .exception import CleanUpError, ExecutionError
