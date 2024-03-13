@@ -42,6 +42,7 @@ class ShellDriver(CommandMixin, Driver, CommandProtocol, FileTransferProtocol):
         post_login_settle_time (int): optional, seconds of silence after logging in
             before check for a prompt. Useful when the console is interleaved with boot
             output which may interrupt prompt detection.
+        post_login_command (str): optional, command to execute after shell driver is activated
     """
     bindings = {"console": ConsoleProtocol, }
     prompt = attr.ib(validator=attr.validators.instance_of(str))
@@ -53,6 +54,7 @@ class ShellDriver(CommandMixin, Driver, CommandProtocol, FileTransferProtocol):
     console_ready = attr.ib(default="", validator=attr.validators.instance_of(str))
     await_login_timeout = attr.ib(default=2, validator=attr.validators.instance_of(int))
     post_login_settle_time = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    post_login_command = attr.ib(default="", validator=attr.validators.instance_of(str))
 
 
     def __attrs_post_init__(self):
@@ -179,6 +181,12 @@ class ShellDriver(CommandMixin, Driver, CommandProtocol, FileTransferProtocol):
             if self.post_login_settle_time > 0:
                 self.console.settle(self.post_login_settle_time, timeout=timeout.remaining)
             self._check_prompt()
+
+            if self.post_login_command:
+                self._inject_run()
+                exitcode = self._run(self.post_login_command)[2]
+                if exitcode != 0:
+                    raise RuntimeError(f"post login command '{self.post_login_command}' failed with exit code {exitcode}")
 
     @step()
     def get_status(self):
