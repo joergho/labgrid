@@ -32,6 +32,10 @@ class ShellStorageDriver(Driver):
         default="mmcblk0",
         validator=attr.validators.optional(attr.validators.instance_of(str))
     )
+    timeout = attr.ib(
+        default=30,
+        validator=attr.validators.optional(attr.validators.instance_of(int))
+    )
 
     def on_activate(self):
         pass
@@ -133,7 +137,7 @@ class ShellStorageDriver(Driver):
         #     print_on_silent_log=True
         # )
 
-        self.shell.run(' '.join(args))
+        self.shell.run(' '.join(args), timeout=self.timeout)
 
     @Driver.check_active
     @step(result=True)
