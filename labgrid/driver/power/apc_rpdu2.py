@@ -1,8 +1,10 @@
 from ..exception import ExecutionError
 from ...util.helper import processwrapper
 
-# see http://oidref.com/1.3.6.1.4.1.318.1.1.4.4.2.1.3
-OID = ".1.3.6.1.4.1.318.1.1.4.4.2.1.3"
+# Tested with multiple AP8953 ("Rack PDU 2G") chained using one host rack PDU
+
+# see http://oidref.com/1.3.6.1.4.1.318.1.1.26.9.2.4.1.5
+OID = ".1.3.6.1.4.1.318.1.1.26.9.2.4.1.5"
 
 def _snmp_get(host, oid):
     out = processwrapper.check_output(
@@ -32,7 +34,6 @@ def power_set(host, port, index, value):
 
     index = int(index)
     value = 1 if value else 2
-    assert 1 <= index <= 8
 
     _snmp_set(host, f"{OID}.{index}", f"int {value}")
 
@@ -41,6 +42,5 @@ def power_get(host, port, index):
     assert port is None
 
     index = int(index)
-    assert 1 <= index <= 8
 
     return _snmp_get(host, f"{OID}.{index}")
