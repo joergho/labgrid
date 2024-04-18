@@ -36,7 +36,7 @@ class ShellStorageDriver(Driver):
         validator=attr.validators.optional(attr.validators.instance_of(str))
     )
     timeout = attr.ib(
-        default=30,
+        default=120,
         validator=attr.validators.optional(attr.validators.instance_of(int))
     )
 
@@ -64,9 +64,7 @@ class ShellStorageDriver(Driver):
         if filename is None and self.image is not None:
             filename = self.target.env.config.get_image_path(self.image)
         assert filename, "write_image requires a filename"
-        mf = ManagedFile(filename, self.http)
-        mf.sync_to_resource()
-        remote_path = mf.get_remote_path()
+        remote_path = self.http.stage(filename)
 
         # wait for medium
         timeout = Timeout(10.0)
@@ -87,6 +85,7 @@ class ShellStorageDriver(Driver):
             target = f"/dev/{self.block_name}p{partition}"
 
         if mode == Mode.DD:
+            raise NotImplementedError("flashing with DD mode is not yet implemented")
             self.logger.info('Writing %s to %s using dd.', remote_path, target)
             block_size = '512' if skip or seek else '4M'
             args = [
@@ -107,13 +106,12 @@ class ShellStorageDriver(Driver):
             # Try to find a block map file using the same logic that bmaptool
             # uses. Handles cases where the image is named like: <image>.bz2
             # and the block map file is <image>.bmap
-            mf_bmap = None
+            remote_path_bmap = None
             image_path = filename
             while True:
                 bmap_path = f"{image_path}.bmap"
                 if os.path.exists(bmap_path):
-                    # mf_bmap = ManagedFile(bmap_path, self.storage)
-                    # mf_bmap.sync_to_resource()
+                    remote_path_bmap = self.http.stage(bmap_path)
                     break
 
                 image_path, ext = os.path.splitext(image_path)
@@ -128,12 +126,12 @@ class ShellStorageDriver(Driver):
                 f"{target}",
             ]
 
-            # if mf_bmap is None:
-            #     args.append("--nobmap")
-            # else:
-            #     args.append(f"--bmap={mf_bmap.get_remote_path()}")
+            if remote_path_bmap is None:
+                args.append("--nobmap")
+            else:
+                args.append(f"--bmap={remote_path_bmap}")
         else:
-            raise ValueError(f"invalid mode: {mode}")
+            raise ValueError
 
         # processwrapper.check_output(
         #     args,
