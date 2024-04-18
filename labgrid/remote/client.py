@@ -1217,6 +1217,20 @@ class ClientSession(ApplicationSession):
         for k, v in sorted(data.items()):
             print(f"{k:<16s} {str(v):<10s}")
 
+    def stage(self):
+        place = self.get_acquired_place()
+        target = self._get_target(place)
+        cls = {
+            'tftp': 'TFTPProviderDriver',
+            'http': 'HTTPProviderDriver',
+            'nfs': 'NFSProviderDriver',
+        }[self.args.provider]
+        name = self.args.name
+        drv = self._get_driver_or_new(target, cls, activate=True, name=name)
+        staged_files = [drv.stage(file) for file in self.args.SOURCE]
+        print("staged files:")
+        print(' '.join(staged_files))
+
     def write_files(self):
         place = self.get_acquired_place()
         target = self._get_target(place)
@@ -1790,6 +1804,13 @@ def main():
     tmc_subparser.add_argument('channel', type=int)
     tmc_subparser.add_argument('action', choices=['info', 'values'])
     tmc_subparser.set_defaults(func=ClientSession.tmc_channel)
+
+    subparser = subparsers.add_parser('stage', help='stage files to TFTP/HTTP/NFS provider')
+    subparser.add_argument('--name', '-n', help="optional resource name")
+    subparser.add_argument('provider', type=str, choices=['nfs', 'http', 'tftp'])
+    subparser.add_argument('SOURCE', type=pathlib.PurePath, nargs='+',
+                           help='source file(s) to copy')
+    subparser.set_defaults(func=ClientSession.stage, parser=subparser)
 
     subparser = subparsers.add_parser('write-files', help="copy files onto mass storage device",
                                       usage="%(prog)s [OPTION]... -T SOURCE DEST\n" +
