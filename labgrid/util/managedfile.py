@@ -37,6 +37,7 @@ class ManagedFile:
         validator=attr.validators.instance_of(Resource),
     )
     detect_nfs = attr.ib(default=True, validator=attr.validators.instance_of(bool))
+    use_symlink = attr.ib(default=True, validator=attr.validators.instance_of(bool))
 
     def __attrs_post_init__(self):
         if not os.path.isfile(self.local_path):
@@ -59,6 +60,16 @@ class ManagedFile:
             if self._on_nfs(conn):
                 self.logger.info("File %s is accessible on %s, skipping copy", self.local_path, host)
                 self.rpath = os.path.dirname(self.local_path) + "/"
+            elif self.use_symlink:
+                if not symlink:
+                    raise ValueError("parameter symlink may not be empty")
+                self.logger.info("Synchronizing %s to %s", self.local_path, host)
+                conn.run_check(f"mkdir -p {self.rpath}")
+                conn.put_file(
+                    self.local_path,
+                    f"{symlink}"
+                )
+                symlink = None
             else:
                 self.rpath = f"{self.get_user_cache_path()}/{self.get_hash()}/"
                 self.logger.info("Synchronizing %s to %s", self.local_path, host)

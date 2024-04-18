@@ -16,6 +16,7 @@ class BaseProviderDriver(Driver):
             "host": self.provider.host,
             "internal": self.provider.internal,
             "external": self.provider.external,
+            "use_symlink": self.provider.use_symlink,
         }
 
     @Driver.check_active
@@ -24,7 +25,7 @@ class BaseProviderDriver(Driver):
         symlink = os.path.join(self.provider.internal, os.path.basename(filename))
         assert symlink.startswith(self.provider.internal)
 
-        mf = ManagedFile(filename, self.provider)
+        mf = ManagedFile(filename, self.provider, use_symlink=self.provider.use_symlink)
         mf.sync_to_resource(symlink=symlink)
 
         return self.provider.external + symlink[len(self.provider.internal):]
@@ -56,6 +57,7 @@ class NFSProviderDriver(Driver):
     def get_export_vars(self):
         return {
             "host": self.provider.host,
+            "use_symlink": self.provider.use_symlink,
         }
 
     @Driver.check_active
@@ -63,7 +65,7 @@ class NFSProviderDriver(Driver):
     def stage(self, filename):
         # always copy the file to he user cache path:
         # locally available files might not be NFS-exported
-        mf = ManagedFile(filename, self.provider, detect_nfs=False)
+        mf = ManagedFile(filename, self.provider, detect_nfs=False, use_symlink=self.provider.use_symlink)
         mf.sync_to_resource()
         mf.get_remote_path()
 

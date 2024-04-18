@@ -391,6 +391,7 @@ class RemoteNetworkInterface(NetworkResource, ManagedResource):
 class RemoteBaseProvider(NetworkResource):
     internal = attr.ib(validator=attr.validators.instance_of(str))
     external = attr.ib(validator=attr.validators.instance_of(str))
+    use_symlink = attr.ib(default=True, validator=attr.validators.instance_of(bool))
 
 
 @target_factory.reg_resource
@@ -402,7 +403,7 @@ class RemoteTFTPProvider(RemoteBaseProvider):
 @target_factory.reg_resource
 @attr.s(eq=False)
 class RemoteNFSProvider(NetworkResource):
-    pass
+    use_symlink = attr.ib(default=True, validator=attr.validators.instance_of(bool))
 
 
 @target_factory.reg_resource

@@ -544,6 +544,7 @@ class ProviderGenericExport(ResourceExport):
             'host': self.host,
             'internal': self.local.internal,
             'external': self.local.external,
+            'use_symlink': self.local.use_symlink,
         }
 
 exports["TFTPProvider"] = ProviderGenericExport

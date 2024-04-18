@@ -23,6 +23,9 @@ class ShellStorageDriver(Driver):
         "shell": {
             "ShellDriver",
         },
+        "http": {
+            "HTTPProviderDriver",
+        }
     }
     image = attr.ib(
         default=None,
@@ -61,9 +64,9 @@ class ShellStorageDriver(Driver):
         if filename is None and self.image is not None:
             filename = self.target.env.config.get_image_path(self.image)
         assert filename, "write_image requires a filename"
-        # mf = ManagedFile(filename, self.storage)
-        # mf.sync_to_resource()
-        remote_path = filename
+        mf = ManagedFile(filename, self.http)
+        mf.sync_to_resource()
+        remote_path = mf.get_remote_path()
 
         # wait for medium
         timeout = Timeout(10.0)

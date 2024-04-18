@@ -1806,7 +1806,7 @@ def main():
     tmc_subparser.set_defaults(func=ClientSession.tmc_channel)
 
     subparser = subparsers.add_parser('stage', help='stage files to TFTP/HTTP/NFS provider')
-    subparser.add_argument('--name', '-n', help="optional resource name")
+    subparser.add_argument('--name', '-n', help='optional resource name')
     subparser.add_argument('provider', type=str, choices=['nfs', 'http', 'tftp'])
     subparser.add_argument('SOURCE', type=pathlib.PurePath, nargs='+',
                            help='source file(s) to copy')
