@@ -60,7 +60,7 @@ class ManagedFile:
             if self._on_nfs(conn):
                 self.logger.info("File %s is accessible on %s, skipping copy", self.local_path, host)
                 self.rpath = os.path.dirname(self.local_path) + "/"
-            elif self.use_symlink:
+            elif not self.use_symlink:
                 if not symlink:
                     raise ValueError("parameter symlink may not be empty")
                 self.logger.info("Synchronizing %s to %s", self.local_path, host)
