@@ -24,6 +24,10 @@ class ShellStrategy(Strategy):
     }
 
     status = attr.ib(default=Status.unknown)
+    systemd_timeout = attr.ib(
+        default=30,
+        validator=attr.validators.optional(attr.validators.instance_of(int))
+    )
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -46,7 +50,7 @@ class ShellStrategy(Strategy):
             self.target.activate(self.console)
             self.power.cycle()
             self.target.activate(self.shell)
-            self.shell.run("systemctl is-system-running --wait")
+            self.shell.run("systemctl is-system-running --wait", timeout=self.systemd_timeout)
         else:
             raise StrategyError(
                 f"no transition found from {self.status} to {status}"
