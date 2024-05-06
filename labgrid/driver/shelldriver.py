@@ -88,22 +88,28 @@ class ShellDriver(CommandMixin, Driver, CommandProtocol, FileTransferProtocol):
         """
         # FIXME: Handle pexpect Timeout
         self._check_prompt()
-        marker = gen_marker()
+        marker1 = gen_marker()
+        marker2 = gen_marker()
         # hide marker from expect
-        cmp_command = f'''MARKER='{marker[:4]}''{marker[4:]}' run {shlex.quote(cmd)}'''
-        self.console.sendline(cmp_command)
-        _, _, match, _ = self.console.expect(
-            rf'{marker}(.*){marker}\s+(\d+)\s+{self.prompt}',
-            timeout=timeout
-        )
-        # Remove VT100 Codes, split by newline and remove surrounding newline
-        data = re_vt100.sub('', match.group(1).decode(codec, decodeerrors)).split('\r\n')
-        if data and not data[-1]:
-            del data[-1]
-        self.logger.debug("Received Data: %s", data)
-        # Get exit code
-        exitcode = int(match.group(2))
-        return (data, [], exitcode)
+        cmp_command = f'''MARKER='{marker1[:4]}''{marker1[4:]}' run {shlex.quote(cmd) + " 2>/tmp/labgrid-stderr"}'''
+        cmp_command2 = f'''MARKER='{marker2[:4]}''{marker2[4:]}' run {shlex.quote("cat /tmp/labgrid-stderr")}'''
+        exitcodes = []
+        stdouts = []
+        for marker, cmp_cmd in zip([marker1, marker2], [cmp_command, cmp_command2]):
+            self.console.sendline(cmp_cmd)
+            _, _, match, _ = self.console.expect(
+                rf'{marker}(.*){marker}\s+(\d+)\s+{self.prompt}',
+                timeout=timeout
+            )
+            # Remove VT100 Codes, split by newline and remove surrounding newline
+            data = re_vt100.sub('', match.group(1).decode(codec, decodeerrors)).split('\r\n')
+            if data and not data[-1]:
+                del data[-1]
+            self.logger.debug("Received Data: %s", data)
+            stdouts.append(data)
+            # Get exit code
+            exitcodes.append(int(match.group(2)))
+        return (stdouts[0], stdouts[1], exitcodes[0])
 
     @Driver.check_active
     @step(args=['cmd'], result=True)
