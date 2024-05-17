@@ -2,6 +2,8 @@ import enum
 
 import attr
 
+from pexpect import EOF
+
 from ..factory import target_factory
 from .common import Strategy, StrategyError
 
@@ -11,6 +13,8 @@ class Status(enum.Enum):
     off = 1
     uboot = 2
     shell = 3
+    reboot = 4
+    poweroff = 5
 
 
 @target_factory.reg_driver
@@ -45,10 +49,13 @@ class UBootStrategy(Strategy):
             self.target.activate(self.power)
             self.power.off()
         elif status == Status.uboot:
-            self.transition(Status.off)
+            if self.status != Status.reboot:
+                # switch off
+                self.transition(Status.off)
             self.target.activate(self.console)
-            # cycle power
-            self.power.cycle()
+            if self.status != Status.reboot:
+                # cycle power
+                self.power.cycle()
             # interrupt uboot
             self.target.activate(self.uboot)
         elif status == Status.shell:
@@ -58,6 +65,20 @@ class UBootStrategy(Strategy):
             self.uboot.await_boot()
             self.target.activate(self.shell)
             self.shell.run("systemctl is-system-running --wait", timeout=self.systemd_timeout)
+        elif status == Status.reboot:
+            # transition to shell if not already in this state
+            if self.status != Status.shell:
+                self.transition(Status.shell)
+            self.target.activate(self.console)
+            self.console.sendline("reboot")
+            self.console.expect(["reboot: Restarting system", EOF], 300)
+        elif status == Status.poweroff:
+            # transition to shell if not already in this state
+            if self.status != Status.shell:
+                self.transition(Status.shell)
+            self.target.activate(self.console)
+            self.console.sendline("poweroff")
+            self.console.expect(["reboot: Power down", EOF], 300)
         else:
             raise StrategyError(f"no transition found from {self.status} to {status}")
         self.status = status
