@@ -485,6 +485,27 @@ class ClientSession(ApplicationSession):
             )
         return res
 
+    async def get_tags(self):
+        """Get the tags on a place"""
+        place = self.get_place()
+        if self.args.keys:
+            keys = set(place.tags.keys()).intersection(self.args.keys)
+            tags = {}
+            for key in keys:
+                tags[key] = place.tags[key]
+        else:
+            tags = place.tags.copy()
+        if self.args.json:
+            print(tags)
+        else:
+            if self.args.value_only:
+                tags_to_print = tags.values()
+            elif self.args.argument_style:
+                tags_to_print = [f"--{key}={value}" for key, value in tags.items()]
+            else:
+                tags_to_print = [f"{key}={value}" for key, value in tags.items()]
+            print(' '.join(tags_to_print))
+
     async def add_match(self):
         """Add a match for a place, making fuzzy matching available to the
         client"""
@@ -1603,6 +1624,18 @@ def main():
     subparser.add_argument('tags', metavar='KEY=VALUE', nargs='+',
                            help="use an empty value for deletion")
     subparser.set_defaults(func=ClientSession.set_tags)
+
+    subparser = subparsers.add_parser('get-tags',
+                                      help="Print place tags")
+    subparser.add_argument('--json', action='store_true', default=False,
+                           help="print in JSON format")
+    subparser.add_argument('--argument-style', action='store_true', default=False,
+                           help="print formatted as --key=value")
+    subparser.add_argument('--value-only', action='store_true', default=False,
+                           help="print value only")
+    subparser.add_argument('keys', metavar='KEY', nargs='*',
+                           help="if no key is specified, all tags are printed")
+    subparser.set_defaults(func=ClientSession.get_tags)
 
     subparser = subparsers.add_parser('add-match',
                                       help="add one (or multiple) match pattern(s) to a place")
